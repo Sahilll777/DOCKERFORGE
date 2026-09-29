@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dockerforge:0.2.0
+    container_name: dockerforge-api
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql://dockerforge:dockerforge_dev@postgres:5432/dockerforge
+    depends_on:
+      - postgres
+    networks:
+      - dockerforge-network
+
+  postgres:
+    image: postgres:16
+    container_name: dockerforge-postgres
+    environment:
+      POSTGRES_DB: dockerforge
+      POSTGRES_USER: dockerforge
+      POSTGRES_PASSWORD: dockerforge_dev
+    networks:
+      - dockerforge-network
+
+networks:
+  dockerforge-network:
+    driver: bridge

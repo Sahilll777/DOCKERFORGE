@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.database import check_database_connection
+
 
 app = FastAPI(
     title="DOCKERFORGE",
@@ -21,4 +23,15 @@ def root():
 def health():
     return {
         "status": "healthy",
+    }
+
+
+@app.get("/db-health")
+def database_health():
+    database, user = check_database_connection()
+
+    return {
+        "status": "healthy",
+        "database": database,
+        "user": user,
     }
