@@ -21,9 +21,14 @@ services:
       POSTGRES_DB: dockerforge
       POSTGRES_USER: dockerforge
       POSTGRES_PASSWORD: dockerforge_dev
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - dockerforge-network
 
 networks:
   dockerforge-network:
     driver: bridge
+
+volumes:
+  postgres-data:
