@@ -10,7 +10,8 @@ services:
     environment:
       DATABASE_URL: postgresql://dockerforge:dockerforge_dev@postgres:5432/dockerforge
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - dockerforge-network
 
@@ -23,6 +24,16 @@ services:
       POSTGRES_PASSWORD: dockerforge_dev
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U dockerforge -d dockerforge",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     networks:
       - dockerforge-network
 
