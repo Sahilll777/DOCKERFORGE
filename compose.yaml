@@ -9,6 +9,7 @@ services:
       - "8001:8000"
     environment:
       DATABASE_URL: postgresql://dockerforge:dockerforge_dev@postgres:5432/dockerforge
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,6 +35,12 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+    networks:
+      - dockerforge-network
+
+  redis:
+    image: redis:7
+    container_name: dockerforge-redis
     networks:
       - dockerforge-network
 
