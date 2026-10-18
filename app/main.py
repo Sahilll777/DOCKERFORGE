@@ -1,9 +1,20 @@
-import json
+﻿import json
+import logging
+import os
 
 from fastapi import FastAPI
 
 from app.database import check_database_connection, get_cache_demo_data
 from app.redis import get_cached_value, set_cached_value
+
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+
+logger = logging.getLogger("dockerforge.api")
 
 
 app = FastAPI(
@@ -33,6 +44,8 @@ def health():
 def database_health():
     database, user = check_database_connection()
 
+    logger.info("Database health check succeeded")
+
     return {
         "status": "healthy",
         "database": database,
@@ -50,11 +63,15 @@ def cache_demo():
         if cached_value:
             data = json.loads(cached_value)
 
+            logger.info("Cache hit")
+
             return {
                 **data,
                 "cached": True,
                 "cache_key": cache_key,
             }
+
+        logger.info("Cache miss")
 
         data = get_cache_demo_data()
 
@@ -69,7 +86,13 @@ def cache_demo():
             "cache_key": cache_key,
         }
 
-    except Exception:
+    except Exception as exc:
+        logger.warning(
+            "Cache operation failed; using database fallback "
+            "(error_type=%s)",
+            type(exc).__name__,
+        )
+
         data = get_cache_demo_data()
 
         return {
