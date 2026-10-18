@@ -6,8 +6,8 @@
     image: dockerforge:0.2.0
     container_name: dockerforge-api
     environment:
-      DATABASE_URL: postgresql://dockerforge:dockerforge_dev@postgres:5432/dockerforge
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL in .env}
     depends_on:
       postgres:
         condition: service_healthy
@@ -21,16 +21,16 @@
     image: postgres:16
     container_name: dockerforge-postgres
     environment:
-      POSTGRES_DB: dockerforge
-      POSTGRES_USER: dockerforge
-      POSTGRES_PASSWORD: dockerforge_dev
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U dockerforge -d dockerforge",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"",
         ]
       interval: 5s
       timeout: 5s
