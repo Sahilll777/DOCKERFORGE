@@ -1,4 +1,5 @@
-﻿import json
+﻿
+import json
 import os
 
 from fastapi.testclient import TestClient
@@ -91,7 +92,9 @@ def test_cache_hit(monkeypatch):
     )
     monkeypatch.setattr(
         "app.main.get_cache_demo_data",
-        lambda: (_ for _ in ()).throw(AssertionError("Database should not be called")),
+        lambda: (_ for _ in ()).throw(
+            AssertionError("Database should not be called")
+        ),
     )
 
     response = client.get("/cache-demo")
@@ -135,3 +138,16 @@ def test_openapi_endpoint():
     assert "/health" in data["paths"]
     assert "/db-health" in data["paths"]
     assert "/cache-demo" in data["paths"]
+
+
+def test_metrics_endpoint():
+    # Generate application traffic so the metrics have observations.
+    client.get("/")
+    client.get("/health")
+
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "text/plain" in response.headers["content-type"]
+    assert "dockerforge_http_requests_total" in response.text
+    assert "dockerforge_http_request_duration_seconds" in response.text
