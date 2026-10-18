@@ -5,8 +5,6 @@
       dockerfile: Dockerfile
     image: dockerforge:0.2.0
     container_name: dockerforge-api
-    ports:
-      - "8001:8000"
     environment:
       DATABASE_URL: postgresql://dockerforge:dockerforge_dev@postgres:5432/dockerforge
       REDIS_URL: redis://redis:6379/0
@@ -16,7 +14,8 @@
       redis:
         condition: service_healthy
     networks:
-      - dockerforge-network
+      - frontend
+      - backend
 
   postgres:
     image: postgres:16
@@ -38,7 +37,7 @@
       retries: 5
       start_period: 5s
     networks:
-      - dockerforge-network
+      - backend
 
   redis:
     image: redis:7
@@ -55,10 +54,26 @@
       retries: 5
       start_period: 5s
     networks:
-      - dockerforge-network
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: dockerforge-nginx
+    ports:
+      - "8088:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - frontend
 
 networks:
-  dockerforge-network:
+  frontend:
+    driver: bridge
+
+  backend:
     driver: bridge
 
 volumes:
