@@ -1,0 +1,56 @@
+name: DOCKERFORGE CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dockerforge-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Test and Build
+    runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_DB: dockerforge_ci
+      POSTGRES_USER: dockerforge_ci
+      POSTGRES_PASSWORD: ci_only_postgres_password
+      DATABASE_URL: postgresql://dockerforge_ci:ci_only_postgres_password@postgres:5432/dockerforge_ci
+      REDIS_URL: redis://redis:6379/0
+      LOG_LEVEL: INFO
+      GRAFANA_ADMIN_PASSWORD: ci_only_grafana_password
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run unit and default test suite
+        run: python -m pytest -q
+
+      - name: Validate production Compose configuration
+        run: docker compose -f compose.yaml config --quiet
+
+      - name: Validate development Compose configuration
+        run: docker compose -f compose.yaml -f compose.dev.yaml config --quiet
+
+      - name: Build Docker API image
+        run: docker build --tag dockerforge:ci .
