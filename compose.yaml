@@ -1,10 +1,16 @@
-﻿services:
+services:
   api:
     build:
       context: .
       dockerfile: Dockerfile
     image: dockerforge:0.2.0
     container_name: dockerforge-api
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
       REDIS_URL: ${REDIS_URL:?Set REDIS_URL in .env}
@@ -28,6 +34,12 @@
   postgres:
     image: postgres:16
     container_name: dockerforge-postgres
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
@@ -50,6 +62,12 @@
   redis:
     image: redis:7
     container_name: dockerforge-redis
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test:
         [
@@ -67,6 +85,12 @@
   nginx:
     image: nginx:alpine
     container_name: dockerforge-nginx
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8088:80"
     volumes:
@@ -80,6 +104,12 @@
   prometheus:
     image: prom/prometheus:v3.5.0
     container_name: dockerforge-prometheus
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "9092:9090"
     volumes:
@@ -95,6 +125,12 @@
   grafana:
     image: grafana/grafana:12.1.0
     container_name: dockerforge-grafana
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "3002:3000"
     environment:
