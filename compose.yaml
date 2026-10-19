@@ -96,6 +96,8 @@ services:
     image: nginx:alpine
     container_name: dockerforge-nginx
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     logging:
       driver: json-file
       options:
@@ -127,6 +129,13 @@ services:
     image: prom/prometheus:v3.5.0
     container_name: dockerforge-prometheus
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
     logging:
       driver: json-file
       options:
@@ -160,6 +169,13 @@ services:
     image: grafana/grafana:12.1.0
     container_name: dockerforge-grafana
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
     logging:
       driver: json-file
       options:
