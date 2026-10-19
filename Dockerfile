@@ -9,7 +9,16 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app ./app
+RUN groupadd --system appgroup \
+    && useradd --system \
+       --gid appgroup \
+       --home-dir /app \
+       --no-create-home \
+       appuser
+
+COPY --chown=appuser:appgroup app ./app
+
+USER appuser
 
 EXPOSE 8000
 
