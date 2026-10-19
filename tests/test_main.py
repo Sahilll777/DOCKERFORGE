@@ -1,6 +1,6 @@
-﻿
 import json
 import os
+import uuid
 
 from fastapi.testclient import TestClient
 
@@ -151,3 +151,43 @@ def test_metrics_endpoint():
     assert "text/plain" in response.headers["content-type"]
     assert "dockerforge_http_requests_total" in response.text
     assert "dockerforge_http_request_duration_seconds" in response.text
+
+
+def test_unhandled_exception_records_http_500_metric(monkeypatch):
+    from prometheus_client import REGISTRY
+
+    from app.main import HTTP_REQUESTS_TOTAL
+
+    route_path = f"/_test-error-{uuid.uuid4().hex}"
+
+    def fail_endpoint():
+        raise RuntimeError("simulated endpoint failure")
+
+    app.add_api_route(route_path, fail_endpoint, methods=["GET"])
+
+    try:
+        error_client = TestClient(
+            app,
+            raise_server_exceptions=False,
+        )
+        response = error_client.get(route_path)
+
+        assert response.status_code == 500
+
+        metric = REGISTRY.get_sample_value(
+            "dockerforge_http_requests_total",
+            {
+                "method": "GET",
+                "route": route_path,
+                "status_code": "500",
+            },
+        )
+
+        assert metric is not None
+        assert metric >= 1
+    finally:
+        app.router.routes[:] = [
+            route
+            for route in app.router.routes
+            if getattr(route, "path", None) != route_path
+        ]
